@@ -20,19 +20,35 @@ This repository explains how to repair a Windows USB flash drive that suddenly:
 
 This is a general recovery guide for normal Windows users.
 
+## Which Tool Should I Use?
+
+```mermaid
+flowchart TD
+    A["What does the USB drive look like right now?"] --> B{"Windows asks to format?"}
+    B -- "Yes" --> C["Use UsbRepairTool.exe"]
+    B -- "No" --> D{"Drive looks empty or folders became shortcuts?"}
+    D -- "Yes" --> E["Use UsbHiddenFileRecovery.exe"]
+    D -- "No" --> F{"Files are visible but some names are garbled?"}
+    F -- "Yes" --> G["Use hidden-file recovery first if attributes/shortcuts are involved.<br/>If contents still open, copy out and rename on hard drive."]
+    F -- "No" --> H["This repository may not match the problem.<br/>Check for hardware failure or other filesystem damage."]
+```
+
 ## Typical Windows Prompt
 
 If Windows shows a format prompt like this, and the USB drive had been working just moments ago, this playbook may apply:
 
 ![Windows format prompt example](assets/windows-format-prompt-example.svg)
 
-## Desktop Tool
+## Desktop Tools
 
-For most people, the easiest option is now the desktop executable:
+For most people, the easiest option is one of these desktop executables:
 
 - [dist/UsbRepairTool.exe](dist/UsbRepairTool.exe)
+  Used for the "Windows asks to format the USB drive" case.
+- [dist/UsbHiddenFileRecovery.exe](dist/UsbHiddenFileRecovery.exe)
+  Used for the "files were hidden / folders became shortcuts / names look garbled" case.
 
-What it does:
+What the format-prompt desktop tool does:
 
 - shows a real window instead of a terminal
 - lets you choose a USB disk from a list
@@ -40,7 +56,7 @@ What it does:
 - can create a full image backup first
 - only writes a minimal MBR if the safe pattern is confirmed
 
-The executable requests administrator rights automatically when launched.
+The format-prompt tool requests administrator rights automatically when launched.
 
 ## Another Common USB Problem: Hidden Files and Garbled Names
 
@@ -55,6 +71,7 @@ Typical signs:
 
 For that case, use this helper:
 
+- [dist/UsbHiddenFileRecovery.exe](dist/UsbHiddenFileRecovery.exe)
 - [Start-Recover-Hidden-Files.cmd](Start-Recover-Hidden-Files.cmd)
 
 What it does:
@@ -70,6 +87,20 @@ Important limitation:
 - this helper restores visibility, but it cannot magically reconstruct every damaged file name
 - if names are corrupted but file contents still open, copy the files out first and rename them on your hard drive
 - if names and contents are both broken, use recovery tools instead of attribute repair
+
+## Diagram: Hidden Files / Shortcut Virus Flow
+
+```mermaid
+flowchart TD
+    A["USB drive looks empty or full of shortcuts"] --> B["Run UsbHiddenFileRecovery.exe"]
+    B --> C["Remove Hidden / Read-only / System attributes"]
+    C --> D["Optionally quarantine suspicious root files"]
+    D --> E{"Files are visible again?"}
+    E -- "Yes" --> F{"Names still garbled?"}
+    F -- "No" --> G["Copy files out and scan the drive for malware"]
+    F -- "Yes" --> H["If file contents still open, copy them to hard drive and rename there"]
+    E -- "No" --> I["Switch to deeper file recovery or antivirus cleanup"]
+```
 
 ## Simple Guided Script
 
