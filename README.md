@@ -73,13 +73,18 @@ For that case, use this helper:
 
 - [dist/UsbHiddenFileRecovery.exe](dist/UsbHiddenFileRecovery.exe)
 - [Start-Recover-Hidden-Files.cmd](Start-Recover-Hidden-Files.cmd)
+- [Start-Fix-Hidden-Files-And-Dirty.cmd](Start-Fix-Hidden-Files-And-Dirty.cmd)
 
 What it does:
 
 - lists USB drives and lets the user pick one
-- removes `Hidden`, `Read-only`, and `System` attributes
-- records before/after listings into a report folder
-- can move suspicious shortcut-virus files from the root into quarantine
+- records full before/after listings into a report folder
+- removes `Hidden`, `Read-only`, and `System` attributes from user files
+- skips normal system folders such as `System Volume Information` and `LOST.DIR`
+- records suspicious shortcut/script/executable files and `.lnk` targets without running them
+- can move suspicious root-level shortcut-virus files into quarantine
+- checks whether the volume is dirty and can run `chkdsk /f` after confirmation
+- records Windows Defender status, so you know whether a separate antivirus scan is still needed
 - explains what garbled names usually mean and what to do next
 
 Important limitation:
@@ -87,6 +92,25 @@ Important limitation:
 - this helper restores visibility, but it cannot magically reconstruct every damaged file name
 - if names are corrupted but file contents still open, copy the files out first and rename them on your hard drive
 - if names and contents are both broken, use recovery tools instead of attribute repair
+
+### Double-click workflow used for hidden-file infections
+
+Double-click:
+
+```text
+Start-Fix-Hidden-Files-And-Dirty.cmd
+```
+
+The script asks for the USB drive letter twice, then creates a timestamped report under `repair-output`.
+It performs the same safe sequence used in real-world hidden-file infections:
+
+1. Export a full file listing before repair.
+2. Record hidden/system items.
+3. Record suspicious shortcuts, scripts, executables, and shortcut targets.
+4. Restore user file visibility while leaving system folders alone.
+5. Check the filesystem dirty flag.
+6. If dirty, ask before running `chkdsk /f`.
+7. Export the final listing and a JSON summary.
 
 ## Diagram: Hidden Files / Shortcut Virus Flow
 
