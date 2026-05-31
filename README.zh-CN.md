@@ -74,13 +74,19 @@ flowchart TD
 
 - [dist/UsbHiddenFileRecovery.exe](dist/UsbHiddenFileRecovery.exe)
 - [Start-Recover-Hidden-Files.cmd](Start-Recover-Hidden-Files.cmd)
+- [Start-Fix-Hidden-Files-And-Dirty.cmd](Start-Fix-Hidden-Files-And-Dirty.cmd)
 
 它会做这些事：
 
 - 列出 USB 磁盘让用户选择
-- 自动去掉文件和文件夹的 `隐藏 / 只读 / 系统` 属性
-- 生成修复前后的清单报告
+- 先导出完整的修复前文件清单
+- 自动去掉用户文件和文件夹的 `隐藏 / 只读 / 系统` 属性
+- 跳过 `System Volume Information`、`LOST.DIR` 这类正常系统目录
+- 记录可疑快捷方式、脚本、可执行文件，并解析 `.lnk` 目标路径，但不会执行它们
 - 可选把根目录常见的快捷方式病毒文件移到隔离区
+- 检查 U 盘 Dirty 状态；如果需要，会在确认后运行 `chkdsk /f`
+- 记录 Windows Defender 是否可用，方便判断是否还需要另行杀毒
+- 生成修复前后的清单报告和 JSON 总结
 - 对“乱码文件名”给出下一步处理建议
 
 要注意的是：
@@ -88,6 +94,24 @@ flowchart TD
 - 它能恢复“被隐藏”的文件显示，但不能保证自动修复所有乱码文件名
 - 如果只是文件名乱码，但文件内容还能正常打开，先复制到硬盘，再在硬盘里改名
 - 如果文件名和文件内容都已经异常，那就要改走文件恢复路线，而不是只做属性修复
+
+### 双击修复“文件被隐藏 + Dirty 状态”的流程
+
+直接双击：
+
+```text
+Start-Fix-Hidden-Files-And-Dirty.cmd
+```
+
+脚本会要求输入并二次确认 U 盘盘符，然后在 `repair-output` 里创建带时间戳的报告目录。它会按下面顺序处理：
+
+1. 导出修复前完整文件清单。
+2. 记录隐藏/系统属性的项目。
+3. 记录可疑快捷方式、脚本、可执行文件和快捷方式目标。
+4. 恢复用户文件可见性，同时保留正常系统目录。
+5. 检查文件系统 Dirty 标记。
+6. 如果 Dirty，会先询问再运行 `chkdsk /f`。
+7. 导出修复后完整清单和 `repair-summary.json`。
 
 ## 图解 0：隐藏文件/快捷方式/乱码这类情况怎么走
 
